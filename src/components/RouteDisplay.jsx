@@ -6,14 +6,18 @@ export default function RouteDisplay({ routes, selectedIndex, onSelect }) {
   return (
     <div style={{
       position: 'absolute',
-      bottom: '20px',
-      left: '50%',
-      transform: 'translateX(-50%)',
+      bottom: '0',
+      left: '0',
+      right: '0',
       zIndex: 10,
+      backgroundColor: '#0D1B2A',
+      padding: '12px 16px',
       display: 'flex',
-      gap: '10px',
-      flexWrap: 'wrap',
-      justifyContent: 'center'
+      gap: '12px',
+      justifyContent: 'center',
+      alignItems: 'center',
+      flexWrap: 'nowrap',
+      borderTop: '1px solid #1E2D3D'
     }}>
       {routes.map((route, index) => {
         const { label, color } = getRouteLabel(route.score.total)
@@ -27,48 +31,60 @@ export default function RouteDisplay({ routes, selectedIndex, onSelect }) {
               backgroundColor: isSelected ? '#1E2D3D' : '#0D1B2A',
               border: `2px solid ${isSelected ? color : '#2A3F55'}`,
               borderRadius: '12px',
-              padding: '12px 18px',
+              padding: '10px 16px',
               cursor: 'pointer',
-              minWidth: '140px',
-              textAlign: 'center'
+              flex: 1,
+              maxWidth: '320px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px'
             }}
           >
-            <div style={{
-              color: color,
-              fontWeight: 'bold',
-              fontSize: '16px',
-              marginBottom: '4px'
-            }}>
-              {label}
+            {/* Label + Score */}
+            <div style={{ textAlign: 'center', minWidth: '70px' }}>
+              <div style={{
+                color: color,
+                fontWeight: 'bold',
+                fontSize: '13px',
+                marginBottom: '2px'
+              }}>
+                {label}
+              </div>
+              <div style={{
+                color: 'white',
+                fontSize: '20px',
+                fontWeight: 'bold',
+                lineHeight: 1
+              }}>
+                {route.score.total}
+                <span style={{ fontSize: '12px', color: '#8899AA' }}>/100</span>
+              </div>
             </div>
 
+            {/* Divider */}
             <div style={{
-              color: 'white',
-              fontSize: '22px',
-              fontWeight: 'bold',
-              marginBottom: '4px'
-            }}>
-              {route.score.total}/100
-            </div>
+              width: '1px',
+              height: '36px',
+              backgroundColor: '#2A3F55'
+            }} />
 
-            <div style={{
-              color: '#8899AA',
-              fontSize: '12px',
-              marginBottom: '8px'
-            }}>
-              {route.data.legs[0].distance.text} •{' '}
-              {route.data.legs[0].duration.text}
-            </div>
+            {/* Distance + Duration */}
+            <div style={{ flex: 1 }}>
+              <div style={{ color: 'white', fontSize: '13px', marginBottom: '4px' }}>
+                {route.data.legs[0].distance.text} • {route.data.legs[0].duration.text}
+              </div>
 
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              fontSize: '11px',
-              color: '#8899AA'
-            }}>
-              <span>🛣️ {route.score.breakdown.road}</span>
-              <span>🏥 {route.score.breakdown.havens}</span>
-              <span>🚦 {route.score.breakdown.traffic}</span>
+              {/* Score breakdown in one row */}
+              <div style={{
+                display: 'flex',
+                gap: '10px',
+                fontSize: '12px',
+                color: '#8899AA'
+              }}>
+                <span>🛣️ Road: {route.score.breakdown.road}</span>
+                <span>🏥 Havens: {route.score.breakdown.havens}</span>
+                <span>🚦 Traffic: {route.score.breakdown.traffic}</span>
+              </div>
             </div>
           </div>
         )

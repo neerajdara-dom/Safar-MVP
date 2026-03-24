@@ -166,6 +166,8 @@ export default function Map({ mode }) {
           setStatus('Could not find routes. Try a different destination.')
           return
         }
+        console.log('FULL STEP:', JSON.stringify(result.routes[0].legs[0].steps[0]))
+
 
         setStatus('Calculating safety scores...')
         const scoredRoutes = []
