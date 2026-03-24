@@ -43,7 +43,6 @@ function getRoadTypeScore(route) {
     if (hasIsolated && hasHighway) return 35
     if (hasIsolated) return 25
     return 50
-
   } catch (e) {
     return 30
   }
@@ -61,8 +60,7 @@ function getSafeHavenScore(openCount, totalCount) {
 function getTrafficScore(route) {
   try {
     const durationNormal = route.legs[0].duration.value
-    const durationTraffic =
-      route.legs[0].duration_in_traffic?.value || durationNormal
+    const durationTraffic = route.legs[0].duration_in_traffic?.value || durationNormal
     const ratio = durationTraffic / durationNormal
     if (ratio <= 1.2) return 20
     return 10
@@ -94,16 +92,9 @@ export function calculateSafetyScore(route, openHavens, totalHavens) {
     const total = roadScore + havenScore + trafficScore
     return {
       total: Math.min(total, 100),
-      breakdown: {
-        road: roadScore,
-        havens: havenScore,
-        traffic: trafficScore
-      }
+      breakdown: { road: roadScore, havens: havenScore, traffic: trafficScore }
     }
   } catch (e) {
-    return {
-      total: 50,
-      breakdown: { road: 30, havens: 10, traffic: 10 }
-    }
+    return { total: 50, breakdown: { road: 30, havens: 10, traffic: 10 } }
   }
 }
