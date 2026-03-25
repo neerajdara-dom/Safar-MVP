@@ -86,7 +86,7 @@ export default function Map({ mode, onRoutesFound, selectedRoute, onRouteSelect 
 
           currentMarkerRef.current = new window.google.maps.Marker({
             map: mapRef.current,
-            position: loc,
+            position: position,
             title: 'You'
 })
           mapRef.current.panTo(loc)
@@ -121,7 +121,7 @@ export default function Map({ mode, onRoutesFound, selectedRoute, onRouteSelect 
 
             destMarkerRef.current = new window.google.maps.Marker({
   map: mapRef.current,
-  position: loc,
+  position: position,
   title: 'You'
 })
           }
@@ -154,8 +154,8 @@ export default function Map({ mode, onRoutesFound, selectedRoute, onRouteSelect 
     ">${icon}</div>`
     return new window.google.maps.Marker({
   map: mapRef.current,
-  position: loc,
-  title: 'You'
+  position: position,
+  title: name
 })
   }
 
@@ -287,6 +287,13 @@ Be warm, concise, and safety-focused.`
     }
   }
 
+useEffect(() => {
+  if (!currentLocation || !destination) return
+  if (!window.google) return            // ✅ safety
+
+  calculateRoute()
+}, [mode])
+
   const findSafeRoutes = async () => {
     if (!currentLocation) { alert('Click 📍 Use My Location first'); return }
     if (!destination) { alert('Please select a destination from the dropdown'); return }
@@ -299,28 +306,46 @@ Be warm, concise, and safety-focused.`
     setPolylines([])
     clearHavenMarkers()
 
-    const travelMode = mode === 'bike' ? 'DRIVING' : mode.toUpperCase()
     const directionsService = new window.google.maps.DirectionsService()
+
+    const modeMap = {
+  walking: 'WALKING',
+  bike: 'BICYCLING',
+  driving: 'DRIVING',
+  transit: 'TRANSIT'
+}
+    let selectedMode = google.maps.TravelMode.DRIVING
+
+if (mode === 'walking') selectedMode = google.maps.TravelMode.WALKING
+else if (mode === 'bike') selectedMode = google.maps.TravelMode.BICYCLING
+else if (mode === 'transit') selectedMode = google.maps.TravelMode.TRANSIT
 
     directionsService.route({
       origin: currentLocation,
       destination,
-      travelMode: window.google.maps.TravelMode[travelMode],
       provideRouteAlternatives: true,
+      travelMode: selectedMode,
       drivingOptions: { departureTime: new Date(), trafficModel: 'bestguess' }
+      
     }, async (result, routeStatus) => {
-      if (routeStatus !== 'OK') {
-        setStatus('Could not find routes. Try a different destination.')
-        return
-      }
+      if (routeStatus !== 'OK' || !result?.routes || result.routes.length === 0) {
+  console.log('⚠️ Mode not supported:', mode)
+
+  setStatus(`No ${mode} routes available. Try another mode.`)
+
+  // 👇 IMPORTANT: DO NOT CRASH
+  setRoutes([])
+  return
+}
 
       setStatus('Calculating safety scores...')
       const scored = []
+      if (!result.routes.length) return
 
       for (let i = 0; i < result.routes.length; i++) {
         const route = result.routes[i]
         const havens = await fetchHavenScores(route)
-        const score = calculateSafetyScore(route, havens.open, havens.total)
+        const score = calculateSafetyScore(route, havens.open, havens.total,mode)
         scored.push({ data: route, score, havens })
       }
 
@@ -336,11 +361,12 @@ Be warm, concise, and safety-focused.`
 
       setPolylines(newPolylines)
       setRoutes(scored)
-      onRoutesFound(scored)
-      onRouteSelect(0)
+      onRoutesFound && onRoutesFound(scored)
+onRouteSelect && onRouteSelect(0)
 
       setStatus('Loading safe havens...')
-      const havensData = await fetchAndPinHavens(scored[0].data, currentLocation)
+      if (!scored.length) return
+const havensData = await fetchAndPinHavens(scored[0].data, currentLocation)
       setSafeHavens(havensData)
       setStatus('')
 
@@ -375,7 +401,7 @@ Be warm, concise, and safety-focused.`
           "></div>`
           liveMarkerRef.current = new window.google.maps.Marker({
   map: mapRef.current,
-  position: loc,
+  position: lp,
   title: 'You'
 })
           mapRef.current.panTo(lp)

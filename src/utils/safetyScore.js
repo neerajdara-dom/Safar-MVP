@@ -47,6 +47,71 @@ function getRoadTypeScore(route) {
     return 30
   }
 }
+function getModeAdjustment(route, mode) {
+  try {
+    if (!route?.legs?.[0]?.steps) return 0
+    const steps = route.legs[0].steps
+
+    let hasForest = false
+    let hasHighway = false
+    let isLongIsolated = false
+
+    steps.forEach((step) => {
+      const text = step.instructions?.toLowerCase() || ''
+
+      // 🌲 Forest / isolated detection
+      if (
+        text.includes('forest') ||
+        text.includes('jungle') ||
+        text.includes('ghat') ||
+        text.includes('rural')
+      ) {
+        hasForest = true
+      }
+
+      // 🛣️ Highway detection
+      if (
+        text.includes('highway') ||
+        text.includes('expressway') ||
+        text.includes('nh') ||
+        text.includes('toll')
+      ) {
+        hasHighway = true
+      }
+
+      // 🚫 Very long isolated stretch
+      if (step.distance.value > 10000) {
+        isLongIsolated = true
+      }
+    })
+
+    // 🎯 SMART CONDITIONS (ONLY WHEN NEEDED)
+
+    // 🚶 Walking in forest/isolated = risky
+    if (mode === 'walking' && (hasForest || isLongIsolated)) {
+      return -10
+    }
+
+    // 🏍️ Bike on highway = risky
+    if (mode === 'bike' && hasHighway) {
+      return -8
+    }
+
+    // 🚗 Car in forest = slightly risky (but not harsh)
+    if (mode === 'driving' && hasForest) {
+      return -3
+    }
+
+    // 🚌 Transit is generally safer (small boost)
+    if (mode === 'transit') {
+      return +3
+    }
+
+    return 0
+  } catch {
+    return 0
+  }
+}
 
 function getSafeHavenScore(openCount, totalCount) {
   if (totalCount === 0) return 5
@@ -84,17 +149,28 @@ export function getRouteLabel(score) {
   return { label: 'RISK', color: '#EF4444' }
 }
 
-export function calculateSafetyScore(route, openHavens, totalHavens) {
+export function calculateSafetyScore(route, openHavens, totalHavens, mode='driving') {
   try {
     const roadScore = applyNightPenalty(getRoadTypeScore(route))
     const havenScore = getSafeHavenScore(openHavens, totalHavens)
     const trafficScore = getTrafficScore(route)
-    const total = roadScore + havenScore + trafficScore
+
+    const modeAdjustment = getModeAdjustment(route, mode)
+
+    const total = roadScore + havenScore + trafficScore + modeAdjustment
+
     return {
-      total: Math.min(total, 100),
-      breakdown: { road: roadScore, havens: havenScore, traffic: trafficScore }
+      total: Math.min(Math.max(total, 0), 100),
+      breakdown: {
+        road: roadScore,
+        havens: havenScore,
+        traffic: trafficScore
+      }
     }
   } catch (e) {
-    return { total: 50, breakdown: { road: 30, havens: 10, traffic: 10 } }
+    return {
+      total: 50,
+      breakdown: { road: 30, havens: 10, traffic: 10 }
+    }
   }
 }

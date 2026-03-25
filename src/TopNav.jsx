@@ -8,19 +8,31 @@ export default function TopNav({ onAbout, onEmergencyContacts }) {
   return (
     <nav className="topnav">
       {/* Logo */}
-      <div className="topnav-logo">
-        <div className="logo-icon">
-          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-            <path d="M11 2L4 7V20H18V7L11 2Z" stroke="#4a7fe5" strokeWidth="1.5" fill="none"/>
-            <path d="M11 2L4 7V20H18V7L11 2Z" fill="rgba(74,127,229,0.1)"/>
-            <path d="M9 20V13H13V20" stroke="#4a7fe5" strokeWidth="1.5"/>
-            <path d="M11 6L8 9H14L11 6Z" fill="#4a7fe5"/>
-            <line x1="7" y1="12" x2="7" y2="12.1" stroke="#4a7fe5" strokeWidth="2" strokeLinecap="round"/>
-            <line x1="15" y1="12" x2="15" y2="12.1" stroke="#4a7fe5" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-        </div>
-        <span className="logo-text">Safar</span>
-      </div>
+      <div className="topnav-logo" style={{
+  display: 'flex',
+  alignItems: 'center',
+  gap: '10px'
+}}>
+  <img
+    src="/SAFAR.png"
+    alt="Safar Logo"
+    style={{
+      width: '36px',
+      height: '36px',
+      borderRadius: '10px',
+      boxShadow: '0 0 12px rgba(74,127,229,0.4)'
+    }}
+  />
+
+  <span style={{
+    fontSize: '20px',
+    fontWeight: '600',
+    color: '#E6EDF3',
+    letterSpacing: '0.5px'
+  }}>
+    Safar
+  </span>
+</div>
 
       {/* Center Nav Links */}
       <div className="topnav-links">
