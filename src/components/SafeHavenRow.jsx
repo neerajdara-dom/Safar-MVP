@@ -3,7 +3,7 @@ export default function SafeHavenRow({ havens }) {
 
   const getIcon = (type) => {
     if (type.includes('hospital')) return '🏥'
-    if (type.includes('gas')) return '⛽'
+    if (type.includes('gas_station')) return '⛽'
     if (type.includes('car_repair')) return '🔧'
     if (type.includes('pharmacy')) return '💊'
     return '📍'
@@ -11,7 +11,7 @@ export default function SafeHavenRow({ havens }) {
 
   const getLabel = (type) => {
     if (type.includes('hospital')) return 'Hospital'
-    if (type.includes('gas')) return 'Petrol Pump'
+    if (type.includes('gas_station')) return 'Petrol Pump'
     if (type.includes('car_repair')) return 'Mechanic'
     if (type.includes('pharmacy')) return 'Medical Shop'
     return 'Safe Haven'

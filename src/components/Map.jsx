@@ -84,9 +84,11 @@ export default function Map({ mode, onRoutesFound, selectedRoute, onRouteSelect 
             border:3px solid white;box-shadow:0 0 0 5px rgba(74,127,229,0.25);
           "></div>`
 
-          currentMarkerRef.current = new window.google.maps.marker.AdvancedMarkerElement({
-            map: mapRef.current, position: loc, title: 'You', content: el
-          })
+          currentMarkerRef.current = new window.google.maps.Marker({
+            map: mapRef.current,
+            position: loc,
+            title: 'You'
+})
           mapRef.current.panTo(loc)
           mapRef.current.setZoom(14)
         }
@@ -117,9 +119,11 @@ export default function Map({ mode, onRoutesFound, selectedRoute, onRouteSelect 
               border:2px solid #4a7fe5;
             ">📍</div>`
 
-            destMarkerRef.current = new window.google.maps.marker.AdvancedMarkerElement({
-              map: mapRef.current, position: loc, title: 'Destination', content: el
-            })
+            destMarkerRef.current = new window.google.maps.Marker({
+  map: mapRef.current,
+  position: loc,
+  title: 'You'
+})
           }
         }
       })
@@ -148,46 +152,85 @@ export default function Map({ mode, onRoutesFound, selectedRoute, onRouteSelect 
       display:flex;align-items:center;justify-content:center;font-size:13px;
       border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.5);cursor:pointer;
     ">${icon}</div>`
-    return new window.google.maps.marker.AdvancedMarkerElement({
-      map: mapRef.current, position, title: name, content: el
-    })
+    return new window.google.maps.Marker({
+  map: mapRef.current,
+  position: loc,
+  title: 'You'
+})
   }
 
   const fetchAndPinHavens = (route, userLocation) => {
-    return new Promise((resolve) => {
-      if (!mapRef.current) return resolve([])
-      clearHavenMarkers()
-      const path = route.overview_path
-      if (!path?.length) return resolve([])
-      const midPoint = path[Math.floor(path.length / 2)]
-      const service = new window.google.maps.places.PlacesService(mapRef.current)
-      const all = []; let done = 0
+  return new Promise((resolve) => {
+    if (!mapRef.current) return resolve([])
 
-      HAVEN_TYPES.forEach((type) => {
-        service.nearbySearch({ location: midPoint, radius: 2000, type }, (results, s) => {
-          if (results && s === 'OK') {
+    clearHavenMarkers()
+
+    const path = route.overview_path
+    if (!path?.length) return resolve([])
+
+    const midPoint = path[Math.floor(path.length / 2)]
+    const service = new window.google.maps.places.PlacesService(mapRef.current)
+
+    const all = []
+    let completed = 0
+
+    const finish = () => {
+      completed++
+      if (completed === HAVEN_TYPES.length) {
+        all.sort((a, b) => a.distanceValue - b.distanceValue)
+        resolve(all)
+      }
+    }
+
+    // ⛑️ Safety timeout (IMPORTANT)
+    setTimeout(() => {
+      if (completed < HAVEN_TYPES.length) {
+        console.log("⚠️ Timeout fallback for havens")
+        resolve(all)
+      }
+    }, 3000)
+
+    HAVEN_TYPES.forEach((type) => {
+      service.nearbySearch(
+        {
+          location: midPoint,
+          radius: 2000,
+          type
+        },
+        (results, status) => {
+          if (results && status === 'OK') {
             results.slice(0, 2).forEach((place) => {
               const lat = place.geometry.location.lat()
               const lng = place.geometry.location.lng()
-              const dist = getDistance(userLocation.lat, userLocation.lng, lat, lng)
+
+              const dist = getDistance(
+                userLocation.lat,
+                userLocation.lng,
+                lat,
+                lng
+              )
+
               const marker = createHavenMarker({ lat, lng }, type, place.name)
               havenMarkersRef.current.push(marker)
+
               all.push({
-                name: place.name, type, lat, lng,
-                distance: formatDist(dist), distanceValue: dist,
+                name: place.name,
+                type,
+                lat,
+                lng,
+                distance: formatDist(dist),
+                distanceValue: dist,
                 isOpen: place.business_status === 'OPERATIONAL'
               })
             })
           }
-          done++
-          if (done === HAVEN_TYPES.length) {
-            all.sort((a, b) => a.distanceValue - b.distanceValue)
-            resolve(all)
-          }
-        })
-      })
+
+          finish()
+        }
+      )
     })
-  }
+  })
+}
 
   const fetchHavenScores = (route) => {
     return new Promise((resolve) => {
@@ -285,9 +328,9 @@ Be warm, concise, and safety-focused.`
 
       const newPolylines = scored.map((r, i) => new window.google.maps.Polyline({
         path: r.data.overview_path,
-        strokeColor: ROUTE_COLORS[i] || '#8899aa',
-        strokeOpacity: i === 0 ? 1 : 0.4,
-        strokeWeight: i === 0 ? 7 : 4,
+        strokeColor: "#22C55E",
+        strokeOpacity: 1,
+        strokeWeight: 5,
         map: mapRef.current
       }))
 
@@ -330,9 +373,11 @@ Be warm, concise, and safety-focused.`
             width:16px;height:16px;background:#4a7fe5;border-radius:50%;
             border:3px solid white;box-shadow:0 0 0 6px rgba(74,127,229,0.3);
           "></div>`
-          liveMarkerRef.current = new window.google.maps.marker.AdvancedMarkerElement({
-            map: mapRef.current, position: lp, content: el
-          })
+          liveMarkerRef.current = new window.google.maps.Marker({
+  map: mapRef.current,
+  position: loc,
+  title: 'You'
+})
           mapRef.current.panTo(lp)
         }
         const nearby = safeHavens
@@ -418,7 +463,6 @@ Be warm, concise, and safety-focused.`
           streetViewControl: false,
           mapTypeControl: false,
           fullscreenControl: false,
-          mapId: 'DEMO_MAP_ID',
           styles: [
             { elementType: 'geometry', stylers: [{ color: '#0d1520' }] },
             { elementType: 'labels.text.stroke', stylers: [{ color: '#0d1520' }] },
